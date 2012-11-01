@@ -11,7 +11,7 @@ number_of_spaces = 10
 
 array = number_of_element.times.map{|el| el+1}
 number_of_spaces.times do |num|
-  array.delete((rand*number_of_element).to_int)
+  array.delete(rand(number_of_element))
 end
 
 
