@@ -15,25 +15,37 @@ number_of_spaces.times do |num|
 end
 
 
+# 100 поисков SpaceFinder::Base#spaces
 time_my = Benchmark.realtime do
   100.times do
-    finder = SpaceFinder::Base.new(array,1)
+    finder = SpaceFinder::Base.new(array)
     finder.spaces
   end
 end
 
+# 100 поисков стандартным перебором
+finder_stand = []
 time_standart = Benchmark.realtime do
   100.times do
-    finder = []
+    finder_stand = []
     array.each_with_index do |el,index|
-      if array[index+1] && array[index+1]-el > 1
-        (array[index+1]-el).times do |num|
-          finder << el+1+num
+      if array[index+1] && array[index+1]-array[index] > 1
+        (array[index+1]-array[index]-1).times do |num|
+          finder_stand << array[index]+num+1
         end
       end
     end
   end
 end
 
+# вывод результатов
+print "standart =    "
+p finder_stand
+finder = SpaceFinder::Base.new(array)
+print "SpaceFinder = "
+p finder.spaces
 
-puts "time_my = #{time_my}", "time_standart = #{time_standart}"
+
+
+
+puts "time SF = #{time_my}", "time standart = #{time_standart}"

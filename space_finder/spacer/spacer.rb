@@ -1,53 +1,69 @@
 module SpaceFinder
   class Base
-      attr_accessor :res, :step
-      private :res, :step
-    def initialize array, arr_step
+      attr_accessor :res
+      private :res
+
+    def initialize array
       # массив результатов
       @res = []
 
-      # в переменные экземпляра записывается массив, размер массива,
-      # первый элемент, количество пропусков, шаг в массиве
-      @array,@first,size = array, array.first, array.size
-      @space_count = array.last-@first-size+1
-      self.step = arr_step
+      # в переменную экземпляра записывается массив
+      @array = array
     end
 
     # интерфейс использования класса
     def spaces
-      find_root(@first,@array,@space_count)
-      res.sort!
+      # кеширование результата
+      return res unless res.empty?
+      find_root(@array)
+      res.empty? ? nil : res.sort!
     end
 
     # рекурсивная функция поиска пропущенного элемента.
-    # аргументы - первый элемент массива
-    def find_root(first,array,space_count)
-      return if space_count == 0
+    # аргумент - массив элементов
+    def find_root(array)
       size = array.size
+      first = array.first
+      space_count = array.last - first - size + 1
+
+      # возврат если нет пропусков в массиве
+      return if space_count == 0
+
+      # вычисление центрального индекса
       middle_idx = size.even? ? size/2-1 : size/2
 
+      # если центральный элемент не является последним,
+      #  идёт поиск по массиву выше центрального индекса
       unless middle_idx == array.size - 1
         top_delta = array[middle_idx+1]-array[middle_idx]-1
         top_array = array[middle_idx+1..size-1]
-        top_spaces = array.last - array[middle_idx+1] - top_array.size + 1
+        # если разница между последующим и центральным минус шаг
+        # (в данном случае 1, это на будущее,
+        # если нужно будет принимать массив с отличным от 1 шагом) не равна 0,
+        # то это и есть искомые элементы
         unless top_delta == 0
           top_delta.times do |space|
-            res << array[middle_idx] + space
+            res << array[middle_idx] + space + 1
           end
         end
-        find_root(array[middle_idx+1],top_array,top_spaces)
+        # продолжение поиска по "верхней" ветке
+        find_root(top_array)
       end
 
+      # если центральный элемент не является первым,
+      #  идёт поиск по массиву ниже центрального индекса
       unless middle_idx == 0
         bot_delta = array[middle_idx]-array[middle_idx-1] - 1
         bot_array = array[0..middle_idx-1]
-        bot_spaces = array[middle_idx-1] - array.first - bot_array.size + 1
+        # если разница между центральным и предыдущим минус шаг
+        # не равна 0, то это и есть искомые элементы
         unless bot_delta == 0
           bot_delta.times do |space|
-            res << array[middle_idx] - space
+            res << array[middle_idx] - space - 1
           end
         end
-        find_root(array.first,bot_array,bot_spaces)
+        # продолжение поиска по "нижней" ветке
+        find_root(bot_array)
       end
     end
     private :find_root
