@@ -1,105 +1,144 @@
 module StructFinder
+  # Класс StructFinder::Base. Производит выборку из коллекции,
+  #   по произвольным аттрибутам.
+  # Колелкция должна отвечать требованиям:
+  #  - включать в себя модуль Enumerable
+  #  - отдавать элемент по методу [el_id] c id == el_id
+  # Элементы коллекции должны:
+  #  - отвечать на метод id
+  #  - иметь attr_reader на заявленные в инициализации StructFinder::Base аттрибуты
+
+  # Примечание: эффективность реализации повышается при
+  #   конкретизировании одного запроса, снижается при  усреднении вероятности
+  #   попадания для каждого аттрибута, практически не меняется от количества
+  #   аттрибутов в селекции
+
   class Base
-
-    def initialize collection
+    # Инициализация. Пример использования:
+    # finder = StructFinder::Base.new persons_array,
+    #   :sex=>(0..1),
+    #   :age => (0..100),
+    #   :height => (0..300),
+    #   :index => (0..10000),
+    #   :money => {:range =>(0..10000), :type => float }
+    def initialize collection, attributes
       @collection = collection
+
+      # Хеш для хранения данных, где ключём является аттрибут,
+      # а значением - ещё один хеш. Во внутреннем хеше ключом является
+      # значение аттрибута, а значением - id элемента коллекции.
       @data = Hash.new{|h,k| h[k] = Hash.new{|h2,k2| h2[k2]=[]}}
+
+      # Хеш для кеширования
+      @cache = {}
+
+      # Хеш для хранения границ аттрибутов. Например @border_hash[:sex] == 0..1
+      @border_hash = {}
+
+      # Тип аттрибута, сейчас поддерживается только Integer и Float,
+      # но легко расширяется для других типов
+      @attr_type = {}
+
       @collection.each do |el|
-        @data[:sex][el.sex] << el.id
-        @data[:age][el.age] << el.id
-        @data[:height][el.height] << el.id
-        @data[:index][el.index] << el.id
-        @data[:money][el.money.floor] << el.id
-=begin
-        @money = []
-        @money[el.money.floor] = []
-        @money[el.money.floor] << el.id
+        attributes.each_pair do |attribute,value|
+          # Если значение параметра не хеш - значит Range, и тип Integer по умолчанию
+          unless value.kind_of?(Hash)
+            @border_hash[attribute] = value
+            @attr_type[attribute] = Integer
+          # В противном случае это хеш, с ключами :range и :type
+          else
+            @border_hash[attribute] = value[:range]
+            @attr_type[attribute] = value[:type]
+          end
 
+          # Если тип текущего аттрибута Float, округляем для поиска до нижней границы
+          value = @attr_type[attribute].equal?(Float) ?
+            el.send(attribute).floor : el.send(attribute)
 
-time_hash = Benchmark.realtime do
-          1000000.times{@data[:money][el.money.floor]}
+          # Добавляем элемент в хеш @data для каждого заявленного в параметрах аттрибута
+          @data[attribute][value] << el.id
         end
-
-        time_arr = Benchmark.realtime do
-          1000000.times{@money[el.money.floor]}
-        end
-        debugger
-        ""
-=end
       end
     end
 
+
+    # Интерфейс для использования поиска. Пример использования:
+    #   finder.select :age => 15, :sex => 1, :money => 0..200
     def select params={}
+      # возвращаем nil если параметр не типа Hash
       return nil unless params.kind_of?(Hash)
+
+      # Возвращаем полную коллекцию, если параметр не задан или == {}
       return @collection.map if params.empty?
+
+      # Возвращаем куки если уже был данный запрос
+      return @cache[params] if @cache[params]
+
       res = nil
       order = optimize_select_order(params)
 
+      # Выделяем аттрибут, вероятно, с наименьшим количеством совпавших условий
       minimal = order.shift
-      array_of_min_param = []
-      select_hash={}
 
+      # Массив, содержащий коллекцию id для "минимального" аттрибута
+      array_of_min_param = []
+
+      # Если "минимальный" параметр в своём условии содержит интервал,
+      # В массив добавляем все id, аттрибут которых лежит в этом интервале
       if params[minimal].kind_of?(Range)
+        params[minimal] = params[minimal].to_a.push(params[minimal].last + 1) if @attr_type[minimal].equal?(Float)
         params[minimal].each do |num|
           array_of_min_param += @data[minimal][num]
         end
+      # В проивном случае массив представляет собой коллекцию id,
+      # соответствующих уловию @collection[id].send(:minimal) == params[minimal]
       else
         array_of_min_param = @data[minimal][params[minimal]]
       end
 
+      # Формируем хеш для отбора элементов из array_of_min_param
+      select_hash={}
+
       order.each do |attribute|
+        # Для единого API в поиске, если условие отбора число - формируем
+        # массив с единственным элементом
         select_hash[attribute] = params[attribute].kind_of?(Range) ?
           params[attribute] : [params[attribute]]
       end
 
+      # Формирование lambda-функции, для того чтобы return
+      # не возвращал из StructFinder::Base#select
       lmbd = lambda do |el|
+        # Аттрибуты отсортированы по вероятному количеству элементов
         order.each do |attribute|
           return false unless select_hash[attribute].include?(@collection[el].send(attribute))
         end
       end
 
-      array_of_min_param.select(&lmbd).inject([]) do |result,id|
+      # Непосредственная выборка, с последующим возвратом элементов базовой коллекции
+      @cache[params] = array_of_min_param.select(&lmbd).inject([]) do |result,id|
         result << @collection[id]
       end
-=begin
-      @data[minimal][]
-      order.each do |param|
-        array_of_one_param = []
-        if params[param].kind_of?(Range)
-          params[param].each do |num|
-            array_of_one_param + @data[param][num]
-          end
-        else
-          array_of_one_param=@data[param][params[param]]
-          res = res ? res&array_of_one_param : array_of_one_param
-        end
-      end
-      #debugger
-      #""
-      res
-      #@collection[*ids]
-=end
+
     end
 
+    # private метод хелпер, для оптимизации процесса выборки
     def optimize_select_order params
       order = {}
       params.each_pair do |attribute,value|
-        val = value.kind_of?(Range) ? value.count : 1
-        if attribute == :sex
-          order[:sex] = 1.0/2
-        elsif attribute == :age
-          order[:age] = 1.0/100*(val)
-        elsif attribute == :height
-          order[:height] = 1.0/300*(val)
-        elsif attribute == :index
-          order[:index] = 1.0/100000*(val)
-        elsif attribute == :money
-          order[:money] = 1.0/100000*(val+1)
-        end
+
+        # Если значенме параметра является интервал - считаем его длину
+        # Если это число - длина равна 1
+        length = value.kind_of?(Range) ? value.count : 1
+
+        # Вычисляем среднюю вероятность попадания одного элемента коллекции,
+        # в селекцию конкретного аттрибута. Считаем обратную величину размера
+        # разброса значений для аттрибута и умножаем на длину интервала выборки
+        order[attribute] = 1.0 / @border_hash[attribute].count * length
       end
-      t = order.sort_by{|h|h.last}.map{|h|h.first}
-      #debugger
-      #""
+
+      # сортируем по вероятности и выбираем только символы аттрибутов
+      order.sort_by{|h| h.last}.map{|h|h.first}
     end
     private :optimize_select_order
 
