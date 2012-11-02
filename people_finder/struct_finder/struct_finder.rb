@@ -16,10 +16,10 @@ module StructFinder
   class Base
     # Инициализация. Пример использования:
     # finder = StructFinder::Base.new persons_array,
-    #   :sex=>(0..1),
-    #   :age => (0..100),
-    #   :height => (0..300),
-    #   :index => (0..10000),
+    #   :sex=>0..1,
+    #   :age => 0..100,
+    #   :height => 0..300,
+    #   :index => 0..10000,
     #   :money => {:range =>(0..10000), :type => float }
     def initialize collection, attributes
       @collection = collection
