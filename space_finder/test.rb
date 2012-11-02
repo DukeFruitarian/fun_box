@@ -1,7 +1,7 @@
-require "debugger"
-require "benchmark"
 require File.join(File.dirname(__FILE__), "spacer/spacer")
 
+require "debugger"
+require "benchmark"
 
 # количество элементов в массиве
 number_of_element = 100000
