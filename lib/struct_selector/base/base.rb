@@ -1,4 +1,4 @@
-module StructFinder
+module StructSelector
   # Класс StructFinder::Base. Производит выборку из коллекции,
   #   по произвольным аттрибутам.
   # Колелкция должна отвечать требованиям:

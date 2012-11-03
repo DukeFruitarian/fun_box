@@ -1,5 +1,5 @@
 # непосредственно модуль поиска
-require File.join(File.dirname(__FILE__), "struct_finder/struct_finder")
+require File.join(File.dirname(__FILE__), "base/base")
 
 # структуры-хелперы
 require File.join(File.dirname(__FILE__), "structs")
@@ -10,7 +10,7 @@ require "benchmark"
 # основное время занимает создание 10 миллионов фейковых записей
 # пример из задания
 persons = (0..999999).map{Fake::Person.new}
-persons_finder = StructFinder::Base.new(persons,
+persons_finder = StructSelector::Base.new(persons,
   :sex => 0..1,
   :age => 0..100,
   :height => 0..300,
@@ -20,7 +20,7 @@ persons_finder = StructFinder::Base.new(persons,
 
 # пример с поиском машин
 cars = (0..999999).map{Fake::Car.new}
-cars_finder = StructFinder::Base.new(cars,
+cars_finder = StructSelector::Base.new(cars,
   :door_count => 3..5,
   :engine_volume => 1000..6999,
   :production_year => 1950..2012,
@@ -30,7 +30,7 @@ cars_finder = StructFinder::Base.new(cars,
 
 Benchmark.bm do |b|
 
-  b.report("persons finder") do
+  b.report("persons selector") do
     persons_finder.select :age => 40..100,
       :sex => 0,
       :height => 180,
@@ -38,14 +38,14 @@ Benchmark.bm do |b|
       :money => 2000..25000
   end
 
-  b.report("cars finder") do
+  b.report("cars selector") do
     cars_finder.select :door_count => 4,
       :production_year => 2000..2012,
       :weigh => 7000..8000,
       :screw_count => 50000..50100
   end
 
-  b.report("standart finder") do
+  b.report("standart selector") do
     persons.select do |el|
       el.sex == 0 &&
       el.age <=100 &&

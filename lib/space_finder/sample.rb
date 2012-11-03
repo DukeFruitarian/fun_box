@@ -1,4 +1,4 @@
-require File.join(File.dirname(__FILE__), "spacer/spacer")
+require File.join(File.dirname(__FILE__), "base/base")
 
 require "debugger"
 require "benchmark"
@@ -40,6 +40,7 @@ Benchmark.bm do |b|
 end
 
 # вывод результатов
+puts "search result:"
 print "standart =    "
 p finder_stand
 finder = SpaceFinder::Base.new(array)
