@@ -1,5 +1,4 @@
 require "open-uri"
-require "debugger"
 
 module PictureGrabber
   # Класс PictureGrabber::Base парсит HTML страницу и скачивает рисунки
@@ -11,7 +10,6 @@ module PictureGrabber
     def initialize *formats
       @formats = formats.empty? ? ["jpg","png","jpeg","gif"] :
         formats.first.kind_of?(Array) ? formats.first : formats
-      #debugger
       raise ArgumentError unless @formats.all?{|format| format.kind_of?(String)}
     end
 
@@ -24,7 +22,7 @@ module PictureGrabber
       raise ArgumentError, "wrong name of subdirectory" unless dir.kind_of?(String)
       # Проверяем на наличие протокола
       url = url_.match(/\Ahttp:\/\//) ? url_ : "http:\/\/" + url_
-      #debugger
+
       # Создание при отсутствии и переход в указанную в параметрах директорию
       Dir.chdir(File.dirname(__FILE__))
       Dir.chdir("../../..")
@@ -34,10 +32,7 @@ module PictureGrabber
       Dir.chdir(dir)
 
       # Запись HTML кода страницы в переменную
-      html = ""
-      open(url) do |s|
-        s.each_line{|line| html << line}
-      end
+      html = URI.parse(url).read
 
       # Сканирование страницы на наличие тегов img, получение ссылки на изображение
       imgs = html.scan(/<img.*src="([^"]*(?:#{formats.join('|')})[^"]*)"[^>]*/).flatten

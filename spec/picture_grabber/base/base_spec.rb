@@ -54,10 +54,55 @@ module PictureGrabber
     end
 
     describe "#grab" do
-      let(:grabber) {Base.new("jpeg","jpg")}
+      let(:grabber) {Base.new}
+      let(:html) do
+        %q|
+<div class="Container">
+  <div id="Header">
+    <div id="Nav">
+      <a href="/">Overview</a>
+      <a href="/download">Download</a>
+      <a href="/deploy">Deploy</a>
+      <a href="https://github.com/rails/rails/issues">Bugs/Patches</a>
+      <a href="/screencasts">Screencasts</a>
+      <a href="/documentation">Documentation</a>
+      <a href="/ecosystem">Ecosystem</a>
+      <a href="/community">Community</a>
+      <a href="http://weblog.rubyonrails.org/">Blog</a>
+    </div>
+  </div>
+
+  <div class="message">
+        <img src="/images/rails.png" width="87" height="112" style="margin-right: 10px" alt="Rails" />
+    <img src="/images/headers/overview.gif" width="603" height="112" alt="Web development that doesn't hurt" />
+
+  </div>
+</div>|
+      end
 
       context "with correct params" do
+        it "read all html from page" do
+          uri = mock('uri').as_null_object
+          uri.should_receive(:read).and_return("")
+          URI.should_receive(:parse).with("http://rubyonrails.org").and_return(uri)
+          grabber.grab "rubyonrails.org", "ror"
+        end
 
+        it "create new Thread on each founded link" do
+          uri = mock('uri').as_null_object
+          uri.should_receive(:read).and_return(html)
+          URI.should_receive(:parse).with("http://rubyonrails.org").and_return(uri)
+          Thread.should_receive(:new).exactly(2).times
+          grabber.grab "rubyonrails.org", "ror"
+        end
+
+        it "save picture in given directory" do
+          uri = mock('uri').as_null_object
+          uri.should_receive(:read).and_return(html)
+          URI.should_receive(:parse).with("http://rubyonrails.org").and_return(uri)
+          File.should_receive(:open).with(/ror\//, "wb").exactly(2).times
+          grabber.grab "rubyonrails.org", "ror"
+        end
       end
 
       context "with wrong params" do
