@@ -1,14 +1,13 @@
-# непосредственно модуль поиска
+# Непосредственно модуль поиска
 require File.join(File.dirname(__FILE__), "base/base")
 
-# структуры-хелперы
+# Структуры-хелперы
 require File.join(File.dirname(__FILE__), "structs")
-require "debugger"
 require "benchmark"
 
 
-# основное время занимает создание 10 миллионов фейковых записей
-# пример из задания
+# Основное время занимает создание 10 миллионов фейковых записей
+# Пример из задания
 persons = (0..999999).map{Fake::Person.new}
 persons_finder = StructSelector::Base.new(persons,
   :sex => 0..1,
@@ -18,7 +17,7 @@ persons_finder = StructSelector::Base.new(persons,
   :money => {:range => 0..100000, :type => Float }
  )
 
-# пример с поиском машин
+# Пример с поиском машин
 cars = (0..999999).map{Fake::Car.new}
 cars_finder = StructSelector::Base.new(cars,
   :door_count => 3..5,

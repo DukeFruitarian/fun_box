@@ -24,7 +24,7 @@ module StructSelector
     def initialize collection, attributes
       @collection = collection
 
-      # Хеш для хранения данных, где ключём является аттрибут,
+      # Хеш для хранения данных, где ключом является аттрибут,
       # а значением - ещё один хеш. Во внутреннем хеше ключом является
       # значение аттрибута, а значением - id элемента коллекции.
       @data = Hash.new{|h,k| h[k] = Hash.new{|h2,k2| h2[k2]=[]}}
@@ -36,7 +36,7 @@ module StructSelector
       @border_hash = {}
 
       # Тип аттрибута, сейчас поддерживается только Integer и Float,
-      # но легко расширяется для других типов
+      #   но легко расширяется для других типов
       @attr_type = {}
 
       @collection.each do |el|
@@ -45,7 +45,7 @@ module StructSelector
           unless value.kind_of?(Hash)
             @border_hash[attribute] = value
             @attr_type[attribute] = Integer
-          # В противном случае это хеш, с ключами :range и :type
+          # В противном случае это хеш с ключами :range и :type
           else
             @border_hash[attribute] = value[:range]
             @attr_type[attribute] = value[:type]

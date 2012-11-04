@@ -1,6 +1,5 @@
 require File.join(File.dirname(__FILE__), "base/base")
 
-require "debugger"
 require "benchmark"
 
 # количество элементов в массиве
