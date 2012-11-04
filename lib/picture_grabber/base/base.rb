@@ -1,4 +1,5 @@
 require "open-uri"
+require "debugger"
 
 module PictureGrabber
   # Класс PictureGrabber::Base парсит HTML страницу и скачивает рисунки
@@ -7,15 +8,23 @@ module PictureGrabber
     attr_accessor :formats
 
     # При инициализации можно задать массив форматов изображений для скачивания
-    def initialize formats = nil
-      @formats = formats || ["jpg","png","jpeg","gif"]
+    def initialize *formats
+      @formats = formats.empty? ? ["jpg","png","jpeg","gif"] :
+        formats.first.kind_of?(Array) ? formats.first : formats
+      #debugger
+      raise ArgumentError unless @formats.all?{|format| format.kind_of?(String)}
     end
 
     # Интерфейс для скачивания изображений. 2 необходимых параметра:
     #  - URL страницы для парсинга
     #  - поддиректория в директории images корневого каталога проекта.
     # Решил сделать подобным образом, вместо "#{Dir.home}/images"
-    def grab url, dir
+    def grab url_, dir
+      raise ArgumentError, "wrong URL" unless url_.kind_of?(String)
+      raise ArgumentError, "wrong name of subdirectory" unless dir.kind_of?(String)
+      # Проверяем на наличие протокола
+      url = url_.match(/\Ahttp:\/\//) ? url_ : "http:\/\/" + url_
+      #debugger
       # Создание при отсутствии и переход в указанную в параметрах директорию
       Dir.chdir(File.dirname(__FILE__))
       Dir.chdir("../../..")

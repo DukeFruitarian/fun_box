@@ -3,14 +3,13 @@ require "spec_helper"
 module StructSelector
   describe Base do
 
-    id=-1
 
     let(:params) do
       {:par1 => 0..10, :par2 => 10..20}
     end
 
+    id=-1
     let(:collection) do
-
       (0..100).to_a.map do
         id = id + 1
         obj = stub('object',
@@ -31,14 +30,9 @@ module StructSelector
             obj.should_receive(attribute)
           end
         end
+
         Base.new(collection,params)
       end
-    end
-
-    it "select objects correspond to query" do
-      result = (0..100).step(10).map{|id| collection[id]}
-      selector.select(params.keys.first =>
-        params[params.keys.first].last).should be_eql(result.to_a)
     end
 
     describe "#select" do
@@ -55,6 +49,12 @@ module StructSelector
         res = selector.select(params.keys.first => 5)
         selector.select(params.keys.first => 5).to_a.should be_equal(res)
       end
+    end
+
+    it "select objects correspond to query" do
+      result = (0..100).step(10).map{|id| collection[id]}
+      selector.select(params.keys.first =>
+        params[params.keys.first].last).should be_eql(result.to_a)
     end
   end
 end
