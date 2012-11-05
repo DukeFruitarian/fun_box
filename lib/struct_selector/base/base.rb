@@ -80,7 +80,7 @@ module StructSelector
       # Возвращаем полную коллекцию, если параметр не задан или == {}
       return @collection.map if params.empty?
 
-      # Возвращаем куки если уже был данный запрос
+      # Возвращаем кеш если уже был данный запрос
       return @cache[params] if @cache[params]
 
       res = nil
