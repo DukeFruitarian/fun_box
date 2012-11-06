@@ -16,7 +16,7 @@ Benchmark.bm do |b|
           collection.add Fake::Person.new
         end
       end
+    Thread.list.each{|th| th.join unless Thread.current == th}
     end
   end
 end
-Thread.list.each{|th| th.join unless Thread.current == th}

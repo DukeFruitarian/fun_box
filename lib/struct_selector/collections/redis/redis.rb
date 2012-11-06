@@ -1,39 +1,41 @@
 require "rubygems"
 require "redis"
+require "debugger"
 
 module StructSelector
   module Collections
     class Redis
-      attr_reader :struct_name, :redis, :selector
-      private :struct_name, :redis, :selector
+      attr_reader :struct_name, :redis, :selector, :selector_presense
+      private :struct_name, :redis, :selector, :selector_presense
       include Enumerable
 
       def initialize
         @struct_name = self.class.to_s.downcase
         @redis = ::Redis.new
+        @selector_presense = false
         self
       end
 
       def set_selector selector
         @selector = selector
+        @selector_presense = true
       end
 
       def add obj
-        redis.sadd(struct_name, obj.id)
-        redis.hset(struct_name + "_hash", obj.id.to_s, Marshal.dump(obj))
-        selector.add_obj(obj) if selector
+        redis.hset(struct_name, obj.id.to_s, Marshal.dump(obj))
+        selector.add_obj(obj) if selector_presense
         self
       end
 
       def each
-        redis.hvals(struct_name + "_hash").each do |el|
+        redis.hvals(struct_name).each do |el|
           yield Marshal.load(el)
         end
       end
 
       def [](id)
-        return nil unless id_present?(id)
-        Marshal.load(redis.hget(struct_name + "_hash", id.to_s))
+        marshalize_obj = redis.hget struct_name, id.to_s
+        Marshal.load(marshalize_obj) if marshalize_obj
       end
 
       def del obj
@@ -41,16 +43,10 @@ module StructSelector
       end
 
       def del_by_id id
-        return nil unless id_present?(id)
-        redis.srem(struct_name, id.to_s)
-        selector.del_obj(Marshal.load(redis.hget(struct_name + "_hash", id.to_s))) if selector
-        redis.hget(struct_name + "_hash", id.to_s)
+        deleted = redis.hget struct_name, id.to_s
+        redis.hdel struct_name, id.to_s
+        selector.del_obj(Marshal.load(deleted)) if deleted && selector_presense
       end
-
-      def id_present? id
-        redis.sismember(struct_name, id.to_s)
-      end
-      private :id_present?
 
     end
   end

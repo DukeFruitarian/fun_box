@@ -23,6 +23,10 @@ Benchmark.bm do |b|
 
 
   b.report("redis selector") do
+    debugger
+    coll.del_by_id(50)
+    coll.del_by_id(10)
+    coll.del_by_id(150)
     redis_coll_finder.select :age => 40..100,
       :sex => 0,
       :height => 180,

@@ -134,16 +134,17 @@ module StructSelector
 
     def add_obj obj
       @attr_type.each_pair do |attribute, type|
-        value = type.equal?(Float) ? obj.send(:attribute).floor : obj.send(:attribute)
+        value = type.equal?(Float) ? obj.send(attribute).floor : obj.send(attribute)
         @data[attribute][value] << obj.id
       end
     end
 
     def del_obj obj
       @attr_type.each_pair do |attribute, type|
-        value = type.equal?(Float) ? obj.send(:attribute).floor : obj.send(:attribute)
+        value = type.equal?(Float) ? obj.send(attribute).floor : obj.send(attribute)
         @data[attribute][value].delete(obj.id)
       end
+      obj
     end
 
     # private метод хелпер, для оптимизации процесса выборки
