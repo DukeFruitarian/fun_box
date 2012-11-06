@@ -33,6 +33,8 @@ module StructSelector
     def initialize collection, attributes
       @collection = collection
 
+      collection.set_selector self unless collection.kind_of?(Array)
+
       # Хеш для хранения данных, где ключом является аттрибут,
       # а значением - ещё один хеш. Во внутреннем хеше ключом является
       # значение аттрибута, а значением - id элемента коллекции.
@@ -128,7 +130,20 @@ module StructSelector
       @cache[params] = array_of_min_param.select(&lmbd).inject([]) do |result,id|
         result << @collection[id]
       end
+    end
 
+    def add_obj obj
+      @attr_type.each_pair do |attribute, type|
+        value = type.equal?(Float) ? obj.send(:attribute).floor : obj.send(:attribute)
+        @data[attribute][value] << obj.id
+      end
+    end
+
+    def del_obj obj
+      @attr_type.each_pair do |attribute, type|
+        value = type.equal?(Float) ? obj.send(:attribute).floor : obj.send(:attribute)
+        @data[attribute][value].delete(obj.id)
+      end
     end
 
     # private метод хелпер, для оптимизации процесса выборки

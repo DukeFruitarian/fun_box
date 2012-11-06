@@ -1,5 +1,5 @@
 # Непосредственно модуль поиска
-require File.join(File.dirname(__FILE__), "base/base")
+require File.join(File.dirname(__FILE__), "../struct_selector")
 
 # Структуры-хелперы
 require File.join(File.dirname(__FILE__), "structs")
@@ -27,6 +27,18 @@ cars_finder = StructSelector::Base.new(cars,
   :screw_count => 1000..100999
 )
 
+class Persons < StructSelector::Collections::Redis
+end
+
+coll = Persons.new
+redis_coll_finder = StructSelector::Base.new(coll,
+  :sex => 0..1,
+  :age => 0..100,
+  :height => 0..300,
+  :index => 0..100000,
+  :money => {:range => 0..100000, :type => Float }
+ )
+
 Benchmark.bm do |b|
 
   b.report("persons selector") do
@@ -53,5 +65,13 @@ Benchmark.bm do |b|
       el.index >= 0 &&
       el.index <=500
     end
+  end
+
+  b.report("redis collection select") do
+    redis_coll_finder.select :age => 40..100,
+      :sex => 0,
+      :height => 180,
+      :index => 0..500,
+      :money => 2000..25000
   end
 end
