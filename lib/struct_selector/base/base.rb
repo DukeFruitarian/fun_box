@@ -35,6 +35,7 @@ module StructSelector
       @collection = collection
 
       # Если коллекция отвечает на set_selector, передаём туда self
+
       @collection.set_selector self if @collection.respond_to?(:set_selector)
 
       # Хеш для хранения данных, где ключом является атрибут,
@@ -157,7 +158,10 @@ module StructSelector
       end
 
       # Удаление элемента из кеша предыдущих поисков
-      @cache.values.each{|arr| arr.delete obj.id}
+      @cache.each_pair do |query,result|
+        @cache[query] = result.delete(obj.id)
+      end
+
       # возвращаем удалённый объект
       obj
     end
