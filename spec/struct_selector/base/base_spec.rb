@@ -2,23 +2,6 @@ require "spec_helper"
 
 module StructSelector
   describe Base do
-    let(:params) do
-      {:par1 => 0..10, :par2 => 10..20}
-    end
-
-    id=-1
-    let(:collection) do
-      id = -1
-      (0..99).to_a.map do
-        id = id + 1
-        obj = stub('object',
-          params.keys.first => (id%10 != 0 ?
-            rand(params[params.keys.first].last) :
-            params[params.keys.first].last),
-          params.keys.last => rand(params[params.keys.last].count),
-          :id => id).as_null_object
-      end
-    end
 
     before :each do
       @params = {:par1 => 0..10, :par2 => 10..20}
@@ -33,8 +16,6 @@ module StructSelector
           :id => id).as_null_object
       end
     end
-
-    let(:selector) {Base.new(collection,params)}
 
     describe "#initialize" do
       after :each do
@@ -79,8 +60,8 @@ module StructSelector
       end
 
       it "cache the results of search" do
-        res = @selector.select(params.keys.first => 5)
-        @selector.select(params.keys.first => 5).to_a.should be_equal(res)
+        res = @selector.select(@params.keys.first => 5)
+        @selector.select(@params.keys.first => 5).to_a.should be_equal(res)
       end
     end
 
@@ -107,26 +88,26 @@ module StructSelector
             @params.keys.last => 5,
             :id => 100).as_null_object
           @collection << obj
-          @selector.select(params.keys.first => 2).should_not include(obj)
+          @selector.select(@params.keys.first => 2).should_not include(obj)
           @selector.empty_cache!
           @selector.add_obj(obj)
-          @selector.select(params.keys.first => 2).should include(obj)
+          @selector.select(@params.keys.first => 2).should include(obj)
         end
       end
 
       describe "#del_obj" do
         it "object deleted from cache and can't be selected" do
           obj = @collection[10]
-          @selector.select(params.keys.first => obj.send(params.keys.first)).should include(obj)
+          @selector.select(@params.keys.first => obj.send(@params.keys.first)).should include(obj)
           @selector.del_obj(obj)
-          @selector.select(params.keys.first => obj.send(params.keys.first)).should_not include(obj)
+          @selector.select(@params.keys.first => obj.send(@params.keys.first)).should_not include(obj)
         end
       end
 
       it "select objects correspond to query" do
         result = (0..99).step(10).map{|id| @collection[id]}
         @selector.select(@params.keys.first =>
-          @params[params.keys.first].last).should be_eql(result.to_a)
+          @params[@params.keys.first].last).should be_eql(result.to_a)
       end
     end
   end # describe Base
